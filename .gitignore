@@ -1,0 +1,6 @@
+# CM metadata directories
+.cm/
+
+# MacOS stuff
+.DS_Store
+
