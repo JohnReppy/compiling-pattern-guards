@@ -1,0 +1,30 @@
+(* sources.cm
+ *
+ * A simple ML-like language that is the source and target of the
+ * pattern-matching compilation algorithms.
+ *)
+
+Library
+
+  structure AST
+  structure Basis
+  structure DataCon
+  structure DataTy
+  structure PPAST
+  structure Type
+  structure Var
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+
+  ast.sml
+  basis.sml
+  data-con.sml
+  dataty.sml
+  pp-ast.sml
+  type.sml
+  type-reps.sml
+  var.sml

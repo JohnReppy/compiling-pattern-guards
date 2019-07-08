@@ -1,0 +1,26 @@
+(* sources.cm
+ *
+ * Common utility code for compiling pattern matching
+ *)
+
+Library
+
+  structure ClauseMatrix
+  structure ExpUtil
+  structure Occurrence
+  structure PatMatrix
+  structure PatUtil
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+
+  ../base/sources.cm
+
+  clause-matrix.sml
+  exp-util.sml
+  occurrence.sml
+  pat-matrix.sml
+  pat-util.sml
