@@ -25,7 +25,7 @@ structure DataTy : sig
    * where a constructor is specified by its name and a function for generating
    * its argument type given the owning datatype as an argument.
    *)
-    val new : string * (string * (Type.t -> Type.t) option) list -> t
+    val new : string * (string * (TypeReps.ty -> TypeReps.ty) option) list -> t
 
   end = struct
 
@@ -42,7 +42,7 @@ structure DataTy : sig
     fun new (name, conSpcs) = let
 	  val cons = ref []
 	  val dt = Data{name = name, span = List.length conSpcs, cons = cons}
-	  val ty = Type.T_Data dt
+	  val ty = TypeReps.T_Data dt
 	  fun mkCons (name, NONE) = TypeReps.DCon(Atom.atom name, dt, NONE)
 	    | mkCons (name, SOME argTy) = TypeReps.DCon(Atom.atom name, dt, SOME(argTy ty))
 	  in

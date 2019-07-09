@@ -40,8 +40,8 @@ structure ExpUtil : sig
 		(* end case *))
 	    | E_Var x => Var.typeOf x
 	    | E_Con dc => Type.T_Data(DataCon.owner dc)
-	    | E_Raise _ => raise Fail "unexpected raise"
-	    | E_Exp _ => raise Fail "unexpected Exp"
+	    | E_Raise(_, ty) => ty
+	    | E_Exp(_, ty) => ty
 	  (* end case *))
 
     fun toString exp = "FIXME"

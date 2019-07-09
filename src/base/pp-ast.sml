@@ -138,11 +138,11 @@ structure PPAST : sig
 		      sp();
 		      ppAtomic e;
 		    PP.closeBox ppStrm)
-		| E_Raise e => (
+		| E_Raise(e, _) => (
 		    PP.openHBox ppStrm;
 		      string "raise"; sp(); ppAtomic e;
 		    PP.closeBox ppStrm)
-                | E_Exp exp => string exp
+                | E_Exp(exp, _) => string exp
               (* end case *))
 	  and ppAtomic e = if atomic e
 		then ppCode e

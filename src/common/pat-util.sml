@@ -11,6 +11,9 @@ structure PatUtil : sig
 
     val hasGuard : AST.pat -> bool
 
+  (* return the set of variables that are bound in a pattern *)
+    val varsOf : AST.pat -> Var.Set.set
+
   (* do two patterns overlap? *)
     val compatible : AST.pat * AST.pat -> bool
 
@@ -41,6 +44,20 @@ structure PatUtil : sig
       | hasGuard (P_Or ps) = List.exists hasGuard ps
       | hasGuard (P_If _) = true
       | hasGuard _ = false
+
+  (* return the set of variables that are bound in a pattern *)
+    fun varsOf p = let
+	  fun vars (P_Wild, vs) = vs
+	    | vars (P_Var x, vs) = Var.Set.add(vs, x)
+	    | vars (P_Tuple ps, vs) = List.foldl vars vs ps
+	    | vars (P_Con(_, SOME p), vs) = vars (p, vs)
+	    | vars (P_Con(_, NONE), vs) = vs
+	    | vars (P_Or(p::_), vs) = vars (p, vs)
+	    | vars (P_Or[], vs) = vs
+	    | vars (P_If(p, _), vs) = vars (p, vs)
+	  in
+	    vars (p, Var.Set.empty)
+	  end
 
   (* are two patterns compatible (i.e., does there exist a value that they both match)? *)
     fun compatible (P_Wild, _) = true

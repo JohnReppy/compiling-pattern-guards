@@ -16,8 +16,8 @@ structure AST =
       | E_Select of int * exp
       | E_Var of Var.t
       | E_Con of DataCon.t
-      | E_Raise of exp
-      | E_Exp of string				(* to represent other code *)
+      | E_Raise of exp * Type.t
+      | E_Exp of string * Type.t		(* to represent other code *)
 
     and pat
       = P_Wild					(* '_' *)
