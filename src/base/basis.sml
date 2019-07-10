@@ -61,11 +61,10 @@ structure Basis : sig
 
   (* generate a new monomorphic list type *)
     fun newListTy (tyName, elemTy) = let
-	  val listDT = DT.new (tyName, [
+	  val (listDT, [nilDC, consDC]) = DT.newWithCons (tyName, [
 		  (tyName ^ "_nil", NONE),
 		  (tyName ^ "_cons", SOME(fn ty => Ty.T_Tuple[elemTy, ty]))
 		])
-	  val [nilDC, consDC] = DT.consOf listDT
 	  in {
 	    ty = Type.T_Data listDT,
 	    nilCon = nilDC,

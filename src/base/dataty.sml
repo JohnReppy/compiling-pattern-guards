@@ -27,6 +27,9 @@ structure DataTy : sig
    *)
     val new : string * (string * (TypeReps.ty -> TypeReps.ty) option) list -> t
 
+    val newWithCons : string * (string * (TypeReps.ty -> TypeReps.ty) option) list
+	  -> t * TypeReps.dcon list
+
   end = struct
 
     datatype t = datatype TypeReps.dataty
@@ -48,6 +51,12 @@ structure DataTy : sig
 	  in
 	    cons := List.map mkCons conSpcs;
 	    dt
+	  end
+
+    fun newWithCons arg = let
+	  val dt = new arg
+	  in
+	    (dt, consOf dt)
 	  end
 
   end
