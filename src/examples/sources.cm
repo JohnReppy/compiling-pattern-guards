@@ -1,0 +1,25 @@
+(* sources.cm
+ *
+ * Example match cases for testing.
+ *)
+
+Library
+
+  structure LeFessant01
+  structure LeFessant02
+  structure Sestoft01
+  structure Sestoft02
+  structure XformPats
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  ../base/sources.cm
+
+  le-fessant-01.sml
+  le-fessant-02.sml
+  sestoft-01.sml
+  sestoft-02.sml
+  xform-pats.sml
