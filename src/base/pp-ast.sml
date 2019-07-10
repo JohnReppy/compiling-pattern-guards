@@ -10,7 +10,10 @@ structure PPAST : sig
     val output : TextIO.outstream * AST.exp -> unit
 
   (* print to stdOut *)
-    val print : AST.exp -> unit
+    val pr : AST.exp -> unit
+
+  (* print a deconstructed match *)
+    val prMatch : Var.t * (AST.pat * AST.exp) list -> unit
 
   end = struct
 
@@ -19,6 +22,34 @@ structure PPAST : sig
 
     datatype exp = datatype AST.exp
     datatype pat = datatype AST.pat
+
+    fun expToString (e : exp) = let
+	  fun toS (E_Let(x, e, e'), l) = "<let>" :: l
+	    | toS (E_Fun((f, x, e), e'), l) = "<fun>" :: l
+	    | toS (E_App(E_Var f, e), l) = apply (Var.toString f, e, l)
+	    | toS (E_App(E_Con c, e), l) = apply (DC.toString c, e, l)
+	    | toS (E_App _, l) = "<app>" :: l
+	    | toS (E_If _, l) = "<if>" :: l
+	    | toS (E_Case _, l) = "<case>" :: l
+            | toS (E_Tuple[], l) = "()" :: l
+	    | toS (E_Tuple(e::es), l) =
+                "(" :: toS (e, List.foldr (fn (e, l) => ", " :: toS(e, l)) (")" :: l) es)
+	    | toS (E_Select(i, e), l) = apply("#"^Int.toString i, e, l)
+	    | toS (E_Var x, l) = Var.name x :: l
+	    | toS (E_Con dc, l) = DC.toString dc :: l
+	    | toS (E_Raise(e, _), l) = "raise " :: toS(e, l)
+	    | toS (E_Exp(s, _), l) = s :: l
+	  and apply (f, arg as E_Tuple _, l) = f :: toS(arg, l)
+	    | apply (f, e as E_App _, l) = f :: paren (e, l)
+	    | apply (f, e as E_If _, l) = f :: paren (e, l)
+	    | apply (f, e as E_Case _, l) = f :: paren (e, l)
+	    | apply (f, e as E_Select _, l) = f :: paren (e, l)
+	    | apply (f, e as E_Raise _, l) = f :: paren (e, l)
+	    | apply (f, e, l) = f :: " " :: toS (e, l)
+          and paren (exp, l) = "(" :: toS(exp, ")" :: l)
+	  in
+            String.concat(toS(e, []))
+	  end
 
     fun patToString (p : pat) = let
           fun prec P_Wild = 4
@@ -32,15 +63,16 @@ structure PPAST : sig
 	    | toS (P_Var x, l) = Var.name x :: l
             | toS (P_Tuple[], l) = "()" :: l
             | toS (P_Tuple(p::ps), l) =
-                "(" :: toS (p, List.foldr (fn (p, l) => "," :: toS(p, l)) (")" :: l) ps)
+                "(" :: toS (p, List.foldr (fn (p, l) => ", " :: toS(p, l)) (")" :: l) ps)
             | toS (P_Con(dc, NONE), l) = DC.toString dc :: l
+            | toS (P_Con(dc, SOME(p as P_Tuple _)), l) = DC.toString dc :: toS(p, l)
             | toS (P_Con(dc, SOME p), l) = if (prec p < 4)
                 then DC.toString dc :: "(" :: toS(p, ")" :: l)
                 else DC.toString dc :: " " :: toS(p, l)
             | toS (P_Or [], l) = raise Fail "bogus or-pattern"
             | toS (P_Or(p::ps), l) =
                 paren (3, p, List.foldr (fn (p, l) => " | " :: toS(p, l)) l ps)
-            | toS (P_If(p, e), l) = paren (2, p, " if <exp>" :: l)
+            | toS (P_If(p, e), l) = paren (2, p, " if " :: expToString e :: l)
           and paren (n, pat, l) = if (prec pat < n)
                 then "(" :: toS(pat, ")" :: l)
                 else toS(pat, l)
@@ -97,6 +129,10 @@ structure PPAST : sig
 		| E_App(e1 as E_App _, e2) => (
 		    PP.openHBox ppStrm;
 		      ppCode e1; sp(); ppAtomic e2;
+		    PP.closeBox ppStrm)
+		| E_App(e1, e2 as E_Tuple _) => (
+		    PP.openHBox ppStrm;
+		      ppAtomic e1; ppCode e2;
 		    PP.closeBox ppStrm)
 		| E_App(e1, e2) => (
 		    PP.openHBox ppStrm;
@@ -169,6 +205,8 @@ structure PPAST : sig
             PP.closeStream ppStrm
           end
 
-    fun print e = output(TextIO.stdOut, e)
+    fun pr e = output(TextIO.stdOut, e)
+
+    fun prMatch (x, cases) = pr(AST.E_Case(E_Var x, cases))
 
   end
