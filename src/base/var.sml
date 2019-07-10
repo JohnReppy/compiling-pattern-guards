@@ -55,7 +55,8 @@ structure Var : sig
 	  (* end case *))
       | name (V{name, ...}) = name
 
-    fun toString (V{name, id, ...}) = concat[name, "_", Word.toString id]
+    fun toString (x as V{name="", ...}) = name x
+      | toString (V{name, id, ...}) = concat[name, "_", Word.toString id]
 
     fun same (V{id=id1, ...}, V{id=id2, ...}) = (id1 = id2)
 
