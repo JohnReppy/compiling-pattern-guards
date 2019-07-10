@@ -11,6 +11,8 @@ Library
   structure Sestoft02
   structure XformPats
 
+  structure PPAST	(* re-export from base *)
+
 is
 
   $/basis.cm
