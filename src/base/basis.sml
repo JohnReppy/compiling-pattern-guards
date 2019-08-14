@@ -21,12 +21,18 @@ structure Basis : sig
     val failExn : DataCon.t
     val newExn : string * Type.t option -> DataCon.t
 
+  (* generate a new monomorphic ref type *)
+    val newRefTy : string * Type.t -> {
+            ty : Type.t,
+            refCon : DataCon.t
+          }
+
   (* generate a new monomorphic list type *)
     val newListTy : string * Type.t -> {
-	    ty : Type.t,
-	    nilCon : DataCon.t,
-	    consCon : DataCon.t
-	  }
+            ty : Type.t,
+            nilCon : DataCon.t,
+            consCon : DataCon.t
+          }
 
   end = struct
 
@@ -41,9 +47,9 @@ structure Basis : sig
   (* booleans *)
     local
       val boolDT = DT.new ("bool", [
-	      ("false",  NONE),
-	      ("true", NONE)
-	    ])
+              ("false",  NONE),
+              ("true", NONE)
+            ])
     in
     val boolTy = Ty.T_Data boolDT
     val [falseCon, trueCon] = DT.consOf boolDT
@@ -59,16 +65,26 @@ structure Basis : sig
     val failExn = newExn ("Fail", SOME stringTy)
     end (* local *)
 
+  (* generate a new monomorphic ref type *)
+    fun newRefTy (tyName, argTy) = let
+          val (refDT, [refDC]) = DT.newWithCons (tyName, [
+                  (tyName ^ "_ref", SOME Fn.id)
+                ])
+          in {
+            ty = Type.T_Data refDT,
+            refCon = refDC
+          } end
+
   (* generate a new monomorphic list type *)
     fun newListTy (tyName, elemTy) = let
-	  val (listDT, [nilDC, consDC]) = DT.newWithCons (tyName, [
-		  (tyName ^ "_nil", NONE),
-		  (tyName ^ "_cons", SOME(fn ty => Ty.T_Tuple[elemTy, ty]))
-		])
-	  in {
-	    ty = Type.T_Data listDT,
-	    nilCon = nilDC,
-	    consCon = consDC
-	  } end
+          val (listDT, [nilDC, consDC]) = DT.newWithCons (tyName, [
+                  (tyName ^ "_nil", NONE),
+                  (tyName ^ "_cons", SOME(fn ty => Ty.T_Tuple[elemTy, ty]))
+                ])
+          in {
+            ty = Type.T_Data listDT,
+            nilCon = nilDC,
+            consCon = consDC
+          } end
 
   end
