@@ -7,6 +7,8 @@ Library
 
   structure LeFessant01
   structure LeFessant02
+  structure Paper01
+  structure Paper02
   structure Sestoft01
   structure Sestoft02
   structure XformPats
@@ -22,6 +24,8 @@ is
 
   le-fessant-01.sml
   le-fessant-02.sml
+  paper-01.sml
+  paper-02.sml
   sestoft-01.sml
   sestoft-02.sml
   xform-pats.sml
