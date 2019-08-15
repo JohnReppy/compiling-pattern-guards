@@ -12,7 +12,7 @@ structure PatUtil : sig
     val hasGuard : AST.pat -> bool
 
   (* return the set of variables that are bound in a pattern *)
-    val varsOf : AST.pat -> Var.Set.set
+    val varsOf : AST.pat -> Var.t list
 
   (* do two patterns overlap? *)
     val compatible : AST.pat * AST.pat -> bool
@@ -56,7 +56,7 @@ structure PatUtil : sig
 	    | vars (P_Or[], vs) = vs
 	    | vars (P_If(p, _), vs) = vars (p, vs)
 	  in
-	    vars (p, Var.Set.empty)
+	    Var.Set.toList (vars (p, Var.Set.empty))
 	  end
 
   (* are two patterns compatible (i.e., does there exist a value that they both match)? *)
