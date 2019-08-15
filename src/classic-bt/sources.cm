@@ -1,0 +1,19 @@
+(* sources.cm
+ *
+ * The *Classic* Backtracking algorithm from *Optimizing Pattern Matching*
+ * by Fabrice Le Fessant and Luc Maranget (ICFP 2001).
+ *)
+
+Library
+
+  structure Backtrack
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  ../base/sources.cm
+  ../common/sources.cm
+
+  backtrack.sml
