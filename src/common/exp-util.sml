@@ -53,13 +53,6 @@ structure ExpUtil : sig
     fun isTrue (E_Con dc) = DataCon.same(dc, Basis.trueCon)
       | isTrue _ = false
 
-    fun call (f, args) = let
-	  val args = (case args
-		 of [e] => e
-		  | es => E_Tuple es
-		(* end case *))
-	  in
-	    E_App(E_Var f, args)
-	  end
+    fun call (f, args) = E_App(E_Var f, args)
 
   end

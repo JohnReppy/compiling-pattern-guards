@@ -26,19 +26,20 @@ structure PPAST : sig
     fun expToString (e : exp) = let
 	  fun toS (E_Let(x, e, e'), l) = "<let>" :: l
 	    | toS (E_Fun((f, x, e), e'), l) = "<fun>" :: l
-	    | toS (E_App(E_Var f, e), l) = apply (Var.toString f, e, l)
-	    | toS (E_App(E_Con c, e), l) = apply (DC.toString c, e, l)
+	    | toS (E_App(E_Var f, es), l) = Var.toString f :: tuple(es, l)
+	    | toS (E_App(E_Con c, [e]), l) = apply (DC.toString c, e, l)
 	    | toS (E_App _, l) = "<app>" :: l
 	    | toS (E_If _, l) = "<if>" :: l
 	    | toS (E_Case _, l) = "<case>" :: l
-            | toS (E_Tuple[], l) = "()" :: l
-	    | toS (E_Tuple(e::es), l) =
-                "(" :: toS (e, List.foldr (fn (e, l) => ", " :: toS(e, l)) (")" :: l) es)
+            | toS (E_Tuple es, l) = tuple(es, l)
 	    | toS (E_Select(i, e), l) = apply("#"^Int.toString i, e, l)
 	    | toS (E_Var x, l) = Var.name x :: l
 	    | toS (E_Con dc, l) = DC.toString dc :: l
 	    | toS (E_Raise(e, _), l) = "raise " :: toS(e, l)
 	    | toS (E_Exp(s, _), l) = s :: l
+	  and tuple ([], l) = "()" :: l
+	    | tuple (e::es, l) =
+                "(" :: toS (e, List.foldr (fn (e, l) => ", " :: toS(e, l)) (")" :: l) es)
 	  and apply (f, arg as E_Tuple _, l) = f :: toS(arg, l)
 	    | apply (f, e as E_App _, l) = f :: paren (e, l)
 	    | apply (f, e as E_If _, l) = f :: paren (e, l)
@@ -98,12 +99,21 @@ structure PPAST : sig
           fun nl () = PP.newline ppStrm
           val string = PP.string ppStrm
 	  fun ppBlk blk = let
-		fun pp (E_Fun((f, x, e1), e2)) = (
+		fun pp (E_Fun((f, xs, e1), e2)) = (
 		      PP.openHBox ppStrm;
 			string "fun"; sp(); string(Var.name f);
-			sp(); string(Var.toString x);
-			sp(); string "=";
-			sp(); ppCode e1;
+			sp();
+			case xs
+			 of [] => string "()"
+			  | x::xr => (
+			      string "("; string(Var.toString x);
+			      List.app (fn x => (string ","; sp(); string(Var.toString x))) xr;
+			      string ")")
+			(* end case *);
+			sp(); string "="; sp();
+			PP.openVBox ppStrm (PP.Abs 4);
+		          ppCode e1;
+			PP.closeBox ppStrm;
 		      PP.closeBox ppStrm;
 		      nl(); pp e2)
 		  | pp (E_Let(x, e1, e2)) = (
@@ -126,17 +136,22 @@ structure PPAST : sig
           and ppCode e = (case e
                of E_Let _ => ppBlk e
                 | E_Fun _ => ppBlk e
-		| E_App(e1 as E_App _, e2) => (
+		| E_App(f, [arg]) => (
 		    PP.openHBox ppStrm;
-		      ppCode e1; sp(); ppAtomic e2;
+		      ppAtomic f;
+		      sp();
+		      ppAtomic arg;
 		    PP.closeBox ppStrm)
-		| E_App(e1, e2 as E_Tuple _) => (
+		| E_App(e1, args) => (
 		    PP.openHBox ppStrm;
-		      ppAtomic e1; ppCode e2;
-		    PP.closeBox ppStrm)
-		| E_App(e1, e2) => (
-		    PP.openHBox ppStrm;
-		      ppAtomic e1; sp(); ppAtomic e2;
+		      ppAtomic e1;
+		      case args
+		       of [] => string "()"
+			| e::es => (
+			    string "("; ppCode e;
+			    List.app (fn e => (string ","; sp(); ppCode e)) es;
+			    string ")")
+		      (* end case *);
 		    PP.closeBox ppStrm)
                 | E_If(cond, e1, e2) =>  (
                     PP.openBox ppStrm (PP.Abs 2);
@@ -180,7 +195,7 @@ structure PPAST : sig
 		    PP.closeBox ppStrm)
                 | E_Exp(exp, _) => string exp
               (* end case *))
-	  and ppAtomic e = if atomic e
+	  and ppAtomic (e : AST.exp) = if atomic e
 		then ppCode e
 		else (
 		  PP.openHBox ppStrm;

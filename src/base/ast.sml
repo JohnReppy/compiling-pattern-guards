@@ -9,7 +9,7 @@ structure AST =
     datatype exp
       = E_Let of Var.t * exp * exp
       | E_Fun of function * exp
-      | E_App of exp * exp
+      | E_App of exp * exp list
       | E_If of exp * exp * exp
       | E_Case of exp * (pat * exp) list
       | E_Tuple of exp list
@@ -27,6 +27,6 @@ structure AST =
       | P_Or of pat list			(* pat '|' ... '|' pat *)
       | P_If of pat * exp			(* pat 'if' exp *)
 
-    withtype function = Var.t * Var.t * exp
+    withtype function = Var.t * Var.t list * exp
 
   end
