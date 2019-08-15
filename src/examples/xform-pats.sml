@@ -38,10 +38,10 @@ structure XformPats : sig
 	  fun act s = AST.E_Exp(s, B.intTy)
 	  in
             (arg, [
-		(AST.P_Tuple[n(), cond(setTy, fn s => AST.E_App(isempty, s))], act "1"),
+		(AST.P_Tuple[n(), cond(setTy, fn s => AST.E_App(isempty, [s]))], act "1"),
 		(AST.P_Tuple[
 		    AST.P_Var n',
-		    cond(setTy, fn s => AST.E_App(AST.E_App(has, s), AST.E_Var n'))
+		    cond(setTy, fn s => AST.E_App(AST.E_App(has, [s]), [AST.E_Var n']))
 		  ], act "2"),
 		(AST.P_Tuple[n(), AST.P_Wild], act "3")
               ])
