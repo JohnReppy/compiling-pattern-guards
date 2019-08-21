@@ -66,8 +66,26 @@ structure PatMatrix : sig
    *)
     val filterRowsByCol : (AST.pat -> bool) -> t * int -> row list
 
+  (* `allCol f (mat, c)` returns true if all items in column `c` of `mat` satisfy
+   * the predicate `f`.
+   *)
+    val allCol : ((AST.pat, AST.exp) item -> bool) -> t * int -> bool
+
+  (* `existsCol f (mat, c)` returns true if there is an item in column `c` of `mat`
+   * that satisfies the predicate `f`.
+   *)
+    val existsCol : ((AST.pat, AST.exp) item -> bool) -> t * int -> bool
+
+  (* `foldCol f init (mat, c)` folds the function f over column `c` of `mat`. *)
+    val foldCol : ((AST.pat, AST.exp) item * 'a -> 'a) -> 'a -> t * int ->  'a
+
   (* `removeCol (mat, c)` removes column `c` from the matrix *)
     val removeCol : t * int -> t
+
+  (* `expandCol (mat, c, xf)` replaces each item in column `c` by the result of
+   * applying `xf` to the item.
+   *)
+    val expandCol : t * int * ((AST.pat, AST.exp) item -> (AST.pat, AST.exp) item list) -> t
 
   (* `splitAtRow (mat, r)` splits the matrix `mat` into two matrices, the first with
    * rows 0..`r-1` and the second with rows `r`..n, where `mat` has n rows.
@@ -122,6 +140,9 @@ structure PatMatrix : sig
   (* the kinds of the columns of a matrix *)
     fun matSig (PMat{pats, ...}) = rowSig(V.toList(V.sub(pats, 0)))
 
+  (* compute the number of pattern items in a column *)
+    fun numPats patv = V.foldl (fn (Pat _, n) => n+1 | (Grd _, n) => n) 0 patv
+
     fun fromRows [] = raise Size
       | fromRows (rows as (ps1::_)) = let
           val patvs = V.fromList (List.map V.fromList rows)
@@ -136,7 +157,7 @@ structure PatMatrix : sig
           end
 
     fun toRows (PMat{pats, ...}) =
-	  Vector.foldr (fn (pgs, rows) => (V.toList pgs) :: rows) [] pats
+	  V.foldr (fn (pgs, rows) => (V.toList pgs) :: rows) [] pats
 
     fun toSigAndRows mat = let
 	  val rows as (r1::_) = toRows mat
@@ -222,10 +243,19 @@ structure PatMatrix : sig
                 V.foldr doRow [] pats
               end
 
+    fun allCol pred (PMat{pats, ...}, c) =
+	  V.all (fn row => pred(V.sub(row, c))) pats
+
+    fun existsCol pred (PMat{pats, ...}, c) =
+	  V.exists (fn row => pred(V.sub(row, c))) pats
+
+    fun foldCol f init (PMat{pats, ...}, c) =
+	  V.foldl (fn (row, acc) => f(V.sub(row, c), acc)) init pats
+
   (* remove the n'th element from a vector *)
     fun removeNth (v, 0) = VS.vector(VS.slice(v, 1, NONE))
       | removeNth (v, i) = let
-	  val n = Vector.length v - 1
+	  val n = V.length v - 1
 	  in
 	    if (i = n)
 	      then VS.vector(VS.slice(v, 0, SOME n))
@@ -242,6 +272,25 @@ structure PatMatrix : sig
 		(* end case *))
 	  in
 	    PMat{ncols = ncols', npats = npats', pats = pats'}
+	  end
+
+    fun expandCol (PMat{ncols, npats, pats}, c, expandItem) = let
+	  fun expandRow row = let
+		fun exp (_, []) = raise Subscript
+		  | exp (0, item::itemr) = expandItem item @ itemr
+		  | exp (i, item::itemr) = item :: exp (i-1, itemr)
+		in
+		  V.fromList (exp (c, V.toList row))
+		end
+	  val pats' = V.map expandRow pats
+	  val ncols' = V.length(V.sub(pats', 0))
+	  val npats' = numPats (V.sub(pats', 0))
+	(* check that all the rows are still the same size *)
+	  val _ = if V.exists (fn v => V.length v <> ncols') pats'
+		then raise Size
+		else ()
+	  in
+	    PMat{ncols=ncols', npats=npats', pats=pats'}
 	  end
 
     fun splitAtRow (PMat{ncols, npats, pats}, r) = let
@@ -262,7 +311,7 @@ structure PatMatrix : sig
 	    else PMat{
 		ncols = n1 + n2,
 		npats = np1 + np2,
-		pats = Vector.mapi (fn (i, ps1) => Vector.concat[ps1, Vector.sub(rows2, i)]) rows1
+		pats = V.mapi (fn (i, ps1) => V.concat[ps1, V.sub(rows2, i)]) rows1
 	      }
 
   (* concatenate the columns of two matrices; raises Size if the matrices have different
@@ -271,7 +320,7 @@ structure PatMatrix : sig
     fun above (PMat{ncols=n1, npats=np1, pats=rows1}, PMat{ncols=n2, npats=np2, pats=rows2}) =
 	  if (n1 = n2) andalso (np1 = np2)
 	  andalso ListPair.allEq sameKind (V.toList(V.sub(rows1, 0)), V.toList(V.sub(rows2, 0)))
-	    then PMat{ncols = n1, npats = np1, pats = Vector.concat[rows1, rows2]}
+	    then PMat{ncols = n1, npats = np1, pats = V.concat[rows1, rows2]}
 	    else raise Size
 
   (* print a row of a matrix to stdOut *)
@@ -307,7 +356,7 @@ structure PatMatrix : sig
 		  V.foldri doPat [] pv
 		end
 	(* convert the patterns in the matrix to strings *)
-	  val pats = Vector.mapi doRow pats
+	  val pats = V.mapi doRow pats
 	(* pretty print a row *)
 	  fun ppRow rowPats = let
 		fun ppPat (i, s) = (
@@ -323,7 +372,7 @@ structure PatMatrix : sig
 		end
 	  in
 	    PP.openVBox ppS (PP.Rel 0);
-	      Vector.app ppRow pats;
+	      V.app ppRow pats;
 	    PP.closeBox ppS
 	  end
 
