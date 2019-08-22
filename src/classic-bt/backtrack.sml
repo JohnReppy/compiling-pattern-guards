@@ -29,12 +29,12 @@ structure Backtrack : sig
 
   end = struct
 
-    structure CSet = DataCon.Set
+    structure DCon = DataCon
+    structure CSet = DCon.Set
     structure PMat = PatMatrix
     structure CMat = ClauseMatrix
     structure Occ = Occurrence
     structure Ty = Type
-    structure DCon = DataCon
     structure OMap = Occ.Map
 
     datatype exp = datatype AST.exp
@@ -322,11 +322,11 @@ structure Backtrack : sig
                   (P_Con(dc, y), act) :: branches
                 end
         (* is the column exhaustive for the datatype? *)
-          val default = if (DataTy.span dt = DCon.Set.numItems cset)
+          val default = if (DataTy.span dt = CSet.numItems cset)
                 then []
                 else [(P_Wild, ExpUtil.call(exitK, []))]
           in
-            E_Case(Occ.toExp x, DCon.Set.foldr mkCase default cset)
+            E_Case(Occ.toExp x, CSet.foldr mkCase default cset)
           end
 
     and orRule (x : Occ.t, xr, orPats, (rowPats, act), exitK) = let
