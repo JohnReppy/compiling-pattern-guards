@@ -181,7 +181,7 @@ structure PPAST : sig
                       List.app (fn e => (string ","; sp(); ppCode e)) es;
                       string ")";
                     PP.closeBox ppStrm)
-                | E_Var x => string(Var.name x)
+                | E_Var x => string(Var.toString x)
                 | E_Con dc => string(DataCon.toString dc)
                 | E_Select(i, e) =>  (
 		    PP.openHBox ppStrm;
