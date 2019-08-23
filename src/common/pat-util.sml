@@ -9,6 +9,7 @@ structure PatUtil : sig
     val isCon : AST.pat -> bool
     val isOr : AST.pat -> bool
 
+  (* does the pattern contain a guard? *)
     val hasGuard : AST.pat -> bool
 
   (* return the set of variables that are bound in a pattern *)
