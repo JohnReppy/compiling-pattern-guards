@@ -13,6 +13,9 @@ structure DataCon : sig
     val isConstrFn : t -> bool
     val owner : t -> TypeReps.dataty
 
+  (* is the owner datatype mutable? *)
+    val isRef : t -> bool
+
     val same : t * t -> bool
     val compare : t * t -> order
 
@@ -38,6 +41,8 @@ structure DataCon : sig
       | isConstrFn _ = true
 
     fun owner (DCon(_, dt, _)) = dt
+
+    fun isRef dc = DataTy.isRef(owner dc)
 
     fun span (DCon(_, dt, _)) = DataTy.span dt
 

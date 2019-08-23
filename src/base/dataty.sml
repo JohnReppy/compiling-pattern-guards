@@ -11,6 +11,9 @@ structure DataTy : sig
 
     val same : t * t -> bool
 
+  (* is the datatype mutable? *)
+    val isRef : t -> bool
+
   (* the number of constructors; note that a negative value means that the
    * type has an unbounded number of constructors (e.g., the exn type).
    *)
@@ -30,6 +33,8 @@ structure DataTy : sig
     val newWithCons : string * (string * (TypeReps.ty -> TypeReps.ty) option) list
 	  -> t * TypeReps.dcon list
 
+    val newRef : string * TypeReps.ty -> t * TypeReps.dcon
+
   end = struct
 
     datatype t = datatype TypeReps.dataty
@@ -38,13 +43,15 @@ structure DataTy : sig
 
     fun same (Data{name=a, ...}, Data{name=b, ...}) = (a = b)
 
+    fun isRef (Data{mutable, ...}) = mutable
+
     fun span (Data{span, ...}) = span
 
     fun consOf (Data{span, cons, ...}) = if (span < 0) then [] else !cons
 
     fun new (name, conSpcs) = let
 	  val cons = ref []
-	  val dt = Data{name = name, span = List.length conSpcs, cons = cons}
+	  val dt = Data{name = name, mutable = false, span = List.length conSpcs, cons = cons}
 	  val ty = TypeReps.T_Data dt
 	  fun mkCons (name, NONE) = TypeReps.DCon(Atom.atom name, dt, NONE)
 	    | mkCons (name, SOME argTy) = TypeReps.DCon(Atom.atom name, dt, SOME(argTy ty))
@@ -57,6 +64,15 @@ structure DataTy : sig
 	  val dt = new arg
 	  in
 	    (dt, consOf dt)
+	  end
+
+    fun newRef (name, argTy) = let
+	  val cons = ref []
+	  val dt = Data{name = name, mutable = true, span = 1, cons = cons}
+	  val dc = TypeReps.DCon(Atom.atom(name ^ "_ref"), dt, SOME argTy)
+	  in
+	    cons := [dc];
+	    (dt, dc)
 	  end
 
   end

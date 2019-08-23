@@ -57,7 +57,7 @@ structure Basis : sig
 
   (* exceptions *)
     local
-      val exnDT = TypeReps.Data{name = "exn", span = ~1, cons = ref []}
+      val exnDT = TypeReps.Data{name = "exn", mutable=false, span = ~1, cons = ref []}
     in
     val exnTy = Ty.T_Data exnDT
     fun newExn (name, argTy) = TypeReps.DCon(Atom.atom name, exnDT, argTy)
@@ -67,9 +67,7 @@ structure Basis : sig
 
   (* generate a new monomorphic ref type *)
     fun newRefTy (tyName, argTy) = let
-          val (refDT, [refDC]) = DT.newWithCons (tyName, [
-                  (tyName ^ "_ref", SOME Fn.id)
-                ])
+	  val (refDT, refDC) =  DT.newRef (tyName, argTy)
           in {
             ty = Type.T_Data refDT,
             refCon = refDC
