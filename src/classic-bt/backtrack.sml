@@ -144,6 +144,7 @@ structure Backtrack : sig
 		       of P_Con(c, _) =>
 			    collect' (rowr, row::rows, CSet.add(cset, c))
 			| _ => let
+(* FIXME: this transformation is not safe if there are columns that involve reference cells *)
 			  (* check the rest of the rows to see if there are any rows with a
 			   * head constructor that can be lifted up to the Constr block
 			   * we are building.
@@ -369,6 +370,9 @@ structure Backtrack : sig
 	      E_Raise(E_Con Basis.matchExn, ExpUtil.typeOf(#2(hd cases))))
 	  end
 
-    fun test arg = PPAST.pr(compile arg)
+    fun test arg = (
+	  PPAST.pr(E_Case(E_Var(#1 arg), #2 arg));
+	  print "\n  ==>\n\n";
+	  PPAST.pr(compile arg))
 
   end
