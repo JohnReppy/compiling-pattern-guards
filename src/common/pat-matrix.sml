@@ -42,6 +42,8 @@ structure PatMatrix : sig
   (* extract the i'th row of a matrix (0-based) *)
     val row : t -> int -> row
 
+  (***** OPERATIONS ON ROWS *****)
+
   (* is the specified column a pattern column (i.e., not a guard column) *)
     val isPatCol : t * int -> bool
 
@@ -60,6 +62,13 @@ structure PatMatrix : sig
    * of the rows in the matrix.
    *)
     val existsRows : (row -> bool) -> t -> bool
+
+  (* return the index of the first row that contains an item that satisfies the
+   * predicate, or else NONE
+   *)
+    val findRowIndex : ((AST.pat, AST.exp) item -> bool) -> t -> int option
+
+  (***** OPERATIONS ON COLUMNS *****)
 
   (* `filterRowsByCol pred (mat, c)` returns a list of rows from the pattern matrix `mat`
    * such that the pattern in column `c` satisfies the predicate `pred`.
@@ -87,11 +96,21 @@ structure PatMatrix : sig
    *)
     val expandCol : t * int * ((AST.pat, AST.exp) item -> (AST.pat, AST.exp) item list) -> t
 
+  (***** MATRIX OPERATIONS *****)
+
+  (* `exists pred mat` returns true if there is an element `pg` in `mat` such that
+   * `pred pg` is true.
+   *)
+    val exists : ((AST.pat, AST.exp) item -> bool) -> t -> bool
+
   (* `splitAtRow (mat, r)` splits the matrix `mat` into two matrices, the first with
    * rows 0..`r-1` and the second with rows `r`..n, where `mat` has n rows.
    * Note that if either matrix is empty (has no rows), then Subscript is raised.
    *)
     val splitAtRow : t * int -> t * t
+
+  (* append a row on the end of the matrix *)
+    val appendRow : t * row -> t
 
   (* concatenate the rows of two matrices; raises Size if the matrices have different
    * numbers of rows.
@@ -138,7 +157,7 @@ structure PatMatrix : sig
     fun rowSig row = List.map (fn (Pat _) => Pat() | (Grd _) => Grd()) row
 
   (* the kinds of the columns of a matrix *)
-    fun matSig (PMat{pats, ...}) = rowSig(V.toList(V.sub(pats, 0)))
+    fun matSig (PMat{pats, ...}) = rowSig (V.toList(V.sub(pats, 0)))
 
   (* compute the number of pattern items in a column *)
     fun numPats patv = V.foldl (fn (Pat _, n) => n+1 | (Grd _, n) => n) 0 patv
@@ -226,6 +245,12 @@ structure PatMatrix : sig
             lp 0
           end
 
+    fun findRowIndex pred (mat as PMat{pats, ...}) = (
+	  case V.findi (fn (_, pv) => V.exists pred pv) pats
+	   of SOME(i, _) => SOME i
+	    | NONE => NONE
+	  (* end case *))
+
   (* `filterRowsByCol pred mat col` returns a list of rows from the pattern matrix `mat`
    * such that the pattern in column `col` satisfies the predicate `pred`.
    *)
@@ -293,6 +318,8 @@ structure PatMatrix : sig
 	    PMat{ncols=ncols', npats=npats', pats=pats'}
 	  end
 
+    fun exists pred (PMat{pats, ...}) =  V.exists (V.exists pred) pats
+
     fun splitAtRow (PMat{ncols, npats, pats}, r) = let
           val pats1 = VS.vector(VS.slice(pats, 0, SOME r))
           val pats2 = VS.vector(VS.slice(pats, r, NONE))
@@ -301,6 +328,11 @@ structure PatMatrix : sig
           in
             (mat1, mat2)
           end
+
+    fun appendRow (PMat{ncols, npats, pats}, ps) = PMat{
+	    ncols = ncols, npats = npats,
+	    pats = V.append(pats, V.fromList ps)
+	  }
 
   (* concatenate the rows of two matrices; raises Size if the matrices have different
    * numbers of rows.

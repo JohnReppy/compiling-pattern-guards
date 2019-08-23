@@ -55,11 +55,19 @@ structure ClauseMatrix : sig
    *)
     val filterRowsByCol : (AST.pat -> bool) -> 'act t * int -> 'act row list
 
+  (* return the index of the first row that contains an item that satisfies the
+   * predicate, or else NONE
+   *)
+    val findRowIndex : ((AST.pat, AST.exp) item -> bool) -> 'act t -> int option
+
   (* `splitAtRow (mat, r)` splits the matrix `mat` into two matrices, the first with
    * rows 0..`r-1` and the second with rows `r`..n, where `mat` has n rows.
    * Note that if either matrix is empty (has no rows), then Subscript is raised.
    *)
     val splitAtRow : 'act t * int -> 'act t * 'act t
+
+  (* append a row on the end of the matrix *)
+    val appendRow : 'act t * 'act row -> 'act t
 
   (* `allCol f (mat, c)` returns true if all items in column `c` of `mat` satisfy
    * the predicate `f`.
@@ -82,6 +90,11 @@ structure ClauseMatrix : sig
    *)
     val expandCol : 'act t * int * ((AST.pat, AST.exp) item -> (AST.pat, AST.exp) item list)
 	  -> 'act t
+
+  (* `exists pred mat` returns true if there is an element `pg` in `mat` such that
+   * `pred pg` is true.
+   *)
+    val exists : ((AST.pat, AST.exp) item -> bool) -> 'act t -> bool
 
   (* pretty print a matrix *)
     val pp : TextIOPP.stream * 'act t -> unit
@@ -153,6 +166,8 @@ structure ClauseMatrix : sig
             PM.foldRowsi doRow init pats
           end
 
+    fun findRowIndex pred (CMat{pats, ...}) = PM.findRowIndex pred pats
+
   (* `filterRowsByCol pred mat col` returns a list of rows from the pattern matrix `mat`
    * such that the pattern in column `col` satisfies the predicate `pred`.
    *)
@@ -177,6 +192,11 @@ structure ClauseMatrix : sig
             (mat1, mat2)
           end
 
+    fun appendRow (CMat{pats, acts}, (ps, act)) = CMat{
+	    pats = PM.appendRow(pats, ps),
+	    acts = Vector.append(acts, act)
+	  }
+
     fun allCol pred (CMat{pats, ...}, c) = PM.allCol pred (pats, c)
 
     fun existsCol pred (CMat{pats, ...}, c) = PM.existsCol pred (pats, c)
@@ -188,6 +208,8 @@ structure ClauseMatrix : sig
 
     fun expandCol (CMat{pats, acts}, c, expandItem) =
 	  CMat{pats = PM.expandCol(pats, c, expandItem), acts = acts}
+
+    fun exists pred (CMat{pats, ...}) = PM.exists pred pats
 
     structure PP = TextIOPP
 
