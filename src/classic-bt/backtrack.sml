@@ -40,6 +40,9 @@ structure Backtrack : sig
     datatype exp = datatype AST.exp
     datatype pat = datatype AST.pat
 
+  (* actions in the clause matrix are a pair of an environment specifying how
+   * to access the bound variables and an expression.
+   *)
     type vmap = Var.t OMap.map
     type action = vmap * exp
     type row = action CMat.row
