@@ -33,7 +33,7 @@ structure Sestoft01 : sig
    * | Let(_, Let(_, _, _), _) => 777
    * | Lam(_, Let(_, _, _) => 888
    * | Let(_, _, App(_, _)) => 999
-   * | App(App(Lam(_, Lam(_, _)), _), _) => 1010
+   * | App(App(Lam(_, Lam(_, _)), _), _) => 1010  (* redundant *)
    *)
     val example = let
           val arg = Var.new("arg", Ty.T_Data lamDT)
@@ -45,7 +45,7 @@ structure Sestoft01 : sig
           in
             (arg, [
                 (Var(), act "111"),
-                (Lam(AST.P_Wild), act "222"),
+                (Lam(Var()), act "222"),
                 (Lam(Lam(AST.P_Wild)), act "333"),
                 (Lam(App(AST.P_Wild, AST.P_Wild)), act "444"),
                 (App(Lam(AST.P_Wild), AST.P_Wild), act "555"),
