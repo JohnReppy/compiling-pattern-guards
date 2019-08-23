@@ -35,7 +35,7 @@ structure Paper01 : sig
           in
             (x, [
                 (pRef pOne, act "111"),
-                (AST.P_If(pRef AST.P_Wild, AST.E_Exp("x := One; false", B.boolTy)), act "222"),
+                (AST.P_If(pRef AST.P_Wild, AST.E_Exp("(x := One; false)", B.boolTy)), act "222"),
                 (pRef pOne, act "333")
               ])
           end
