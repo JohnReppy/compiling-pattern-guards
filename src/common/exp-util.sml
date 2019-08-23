@@ -44,7 +44,33 @@ structure ExpUtil : sig
 	    | E_Exp(_, ty) => ty
 	  (* end case *))
 
-    fun toString exp = "FIXME"
+    fun toString e = let
+	  fun concatWith sep f ([], l) = l
+	    | concatWith sep f ([x], l) = f(x, l)
+	    | concatWith sep f (x::xs, l) = concatWith sep f (xs, f(x, sep :: l))
+	  fun toS (0, e, l) = "<exp>" :: l
+	    | toS (d, e, l) = let
+		fun toS' (e, l) = toS(d-1, e, l)
+		in
+		  case e
+		   of E_Let(x, e1, e2) => "let " :: Var.name x :: " = "
+			:: toS'(e1, " in " :: toS'(e2, " end" :: l))
+		    | E_Fun((f, params, e1), e2) => "<fun>" :: l
+		    | E_App(f, args) => toS'(f, "(" :: concatWith "," toS' (args, ")" :: l))
+		    | E_If(e1, e2, e3) => "<if>" :: l
+		    | E_Case(_, (_, e)::_) => "<case>" :: l
+		    | E_Case _ => raise Fail "bad case"
+		    | E_Tuple es => "(" :: concatWith "," toS' (es, ")" :: l)
+		    | E_Select(i, e) => "#" :: Int.toString i :: " " :: toS'(e, l)
+		    | E_Var x => Var.name x :: l
+		    | E_Con dc => DataCon.toString dc :: l
+		    | E_Raise(e, _) => "raise " :: toS'(e, l)
+		    | E_Exp(e, _) => e :: l
+		  (* end case *)
+		end
+	  in
+	    String.concat(toS (3, e, []))
+	  end
 
     val kUnit = E_Tuple[]
     val kTrue = E_Con Basis.trueCon
