@@ -97,10 +97,10 @@ structure ClauseMatrix : sig
     val exists : ((AST.pat, AST.exp) item -> bool) -> 'act t -> bool
 
   (* pretty print a matrix *)
-    val pp : TextIOPP.stream * 'act t -> unit
+    val pp : ('act -> string) -> (TextIOPP.stream * 'act t) -> unit
 
   (* print a matrix to stdOut *)
-    val print : 'act t -> unit
+    val print : ('act -> string) -> 'act t -> unit
 
   end = struct
 
@@ -214,14 +214,56 @@ structure ClauseMatrix : sig
     structure PP = TextIOPP
 
   (* pretty print a matrix *)
-(* TODO: add actions *)
-    fun pp (ppS, CMat{pats, ...}) = PM.pp (ppS, pats)
+    fun pp actToString (ppS, CMat{pats, acts}) = let
+	  val {ncols, ...} = PM.size pats
+          val str = PP.string ppS
+	  val wids = Array.array(ncols+2, 0)
+	  val _ = Array.update(wids, ncols, 2)	(* size of "=>" *)
+	  fun updWid (i, w) = Array.update(wids, i, Int.max(Array.sub(wids, i), w))
+	(* convert the patterns in a row to strings while keeping track of the
+	 * maximum width of each column in the matrix.
+	 *)
+	  fun doRow (i, act) = let
+		fun doPat (c, pg, ps) = let
+		      val s = (case pg
+			     of Pat p => PatUtil.toString p
+			      | Grd e => concat["[", ExpUtil.toString e, "]"]
+			    (* end case *))
+		      in
+			updWid(c, String.size s);
+			s :: ps
+		      end
+		val act = actToString act
+		in
+		  updWid (ncols+1, String.size act);
+		  List.foldri doPat ["=>", act] (PM.row pats i)
+		end
+	(* convert the patterns in the matrix to strings *)
+	  val pats = V.mapi doRow acts
+	(* pretty print a row *)
+	  fun ppRow rowPats = let
+		fun ppPat (i, s) = (
+		      if (i > 0) then PP.space ppS 2 else ();
+		      str (StringCvt.padRight #" " (Array.sub(wids, i)) s))
+		in
+		  PP.openHBox ppS;
+		    str "|"; PP.space ppS 1;
+		    List.appi ppPat rowPats;
+		    PP.space ppS 1; str "|";
+		  PP.closeBox ppS;
+		  PP.newline ppS
+		end
+	  in
+	    PP.openVBox ppS (PP.Rel 0);
+	      V.app ppRow pats;
+	    PP.closeBox ppS
+	  end
 
   (* print a matrix to stdOut *)
-    fun print mat = let
+    fun print actToString mat = let
           val ppS = PP.openOut {dst = TextIO.stdOut, wid = 120}
 	  in
-	    pp (ppS, mat);
+	    pp actToString (ppS, mat);
 	    PP.closeStream ppS
           end
 
