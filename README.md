@@ -6,4 +6,5 @@ the paper *Compiling Successor ML Pattern Guards* (to appear in the
 by John Reppy and Mona Zhair.
 
 There is also a revised version of the ML Workshop paper (some typos have been
-fixed).
+fixed) and a copy of the slides from the talk.
+
