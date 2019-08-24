@@ -1,0 +1,22 @@
+(* sources.cm
+ *
+ * Compiling patterns to decision trees using an approach inspired by Pettersson's
+ * Ph.D. dissertation
+ *
+ *	Compiling Natural Semantics
+ *	LNCS 1549, Springer-Verlag, 1999
+ *)
+
+Library
+
+  structure MatchComp
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  ../base/sources.cm
+  ../common/sources.cm
+
+  match-comp.sml
