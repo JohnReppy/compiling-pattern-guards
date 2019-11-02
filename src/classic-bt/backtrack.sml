@@ -281,9 +281,14 @@ structure Backtrack : sig
           fun doRow (PMat.Pat(P_Tuple pats) :: rowPats, act, rows) =
                 (List.map PMat.Pat pats @ rowPats, act) :: rows
             | doRow (PMat.Pat(P_Var y) :: rowPats, act, rows) = let
-                val pats = List.map (fn _ => P_Wild) tys
+                val pats = List.map (fn _ => PMat.Pat P_Wild) tys
                 in
-                  (List.map PMat.Pat pats @ rowPats, bindVar(act, x, y)) :: rows
+                  (pats @ rowPats, bindVar(act, x, y)) :: rows
+                end
+	    | doRow (PMat.Pat P_Wild :: rowPats, act, rows) = let
+                val pats = List.map (fn _ => PMat.Pat P_Wild) tys
+                in
+                  (pats @ rowPats, act) :: rows
                 end
             | doRow (PMat.Pat(P_Or pats) :: rowPats, act, rows) =
 		raise Fail "TODO: or-pattern in tuple column"
