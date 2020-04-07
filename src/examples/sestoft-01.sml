@@ -31,7 +31,7 @@ structure Sestoft01 : sig
    * | App(Lam(_, _), _) => 555
    * | App(App(_, _), _) => 666
    * | Let(_, Let(_, _, _), _) => 777
-   * | Lam(_, Let(_, _, _) => 888
+   * | Lam(_, Let(_, _, _)) => 888
    * | Let(_, _, App(_, _)) => 999
    * | App(App(Lam(_, Lam(_, _)), _), _) => 1010  (* redundant *)
    *)
