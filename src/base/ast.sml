@@ -24,6 +24,7 @@ structure AST =
       | P_Var of Var.t                          (* var *)
       | P_Tuple of pat list			(* '(' pat ',' ... ',' pat ')' *)
       | P_Con of DataCon.t * pat option		(* con pat *)
+      | P_Lit of int				(* literal pattern *)
       | P_Or of pat list			(* pat '|' ... '|' pat *)
       | P_If of pat * exp			(* pat 'if' exp *)
 

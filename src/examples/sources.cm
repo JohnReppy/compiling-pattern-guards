@@ -11,6 +11,7 @@ Library
   structure Paper02
   structure Sestoft01
   structure Sestoft02
+  structure T4
   structure XformPats
 
   structure PPAST	(* re-export from base *)
@@ -28,4 +29,5 @@ is
   paper-02.sml
   sestoft-01.sml
   sestoft-02.sml
+  t4.sml
   xform-pats.sml
